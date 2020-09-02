@@ -37,9 +37,9 @@
 #define PMP_ADDRESS_ALIGNMENT_INVERTED_MASK (~PMP_ADDRESS_ALIGNMENT_MASK)
 #define PMP_ADDRESS_SHIFT 2
 
-#define PMP_CSR_WRITE(csr, var) asm volatile("csrw " #csr ", %0;" : : "r"(var))
+#define PMP_CSR_WRITE(csr, var) asm volatile("csrw " csr ", %0;" : : "r"(var))
 
-#define PMP_CSR_READ(csr, var) asm volatile("csrr %0, " #csr ";" : "=r"(var) :)
+#define PMP_CSR_READ(csr, var) asm volatile("csrr %0, " csr ";" : "=r"(var) :)
 
 #define PMP_CSR_RW(access, csr, var)       \
   do {                                     \
@@ -138,30 +138,11 @@ static bool pmp_address_aligned(pmp_region_address_t address) {
 static pmp_region_configure_result_t pmp_cfg_csr_rw(
     pmp_region_index_t region, pmp_csr_access_type_t access, uint32_t *value) {
   switch (region) {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-      PMP_CSR_RW(access, pmpcfg0, *value);
+#define PMP_REGION(region_id, config_reg_id) \
+    case region_id: \
+      PMP_CSR_RW(access, "pmpcfg" #config_reg_id, *value); \
       break;
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-      PMP_CSR_RW(access, pmpcfg1, *value);
-      break;
-    case 8:
-    case 9:
-    case 10:
-    case 11:
-      PMP_CSR_RW(access, pmpcfg2, *value);
-      break;
-    case 12:
-    case 13:
-    case 14:
-    case 15:
-      PMP_CSR_RW(access, pmpcfg3, *value);
-      break;
+#include "sw/device/lib/runtime/pmp_regions.def"
     default:
       return kPmpRegionConfigureError;
   }
@@ -172,54 +153,11 @@ static pmp_region_configure_result_t pmp_cfg_csr_rw(
 static bool pmp_addr_csr_rw(pmp_region_index_t region,
                             pmp_csr_access_type_t access, uint32_t *value) {
   switch (region) {
-    case 0:
-      PMP_CSR_RW(access, pmpaddr0, *value);
+#define PMP_REGION(region_id, _) \
+    case region_id: \
+      PMP_CSR_RW(access, "pmpaddr" #region_id, *value); \
       break;
-    case 1:
-      PMP_CSR_RW(access, pmpaddr1, *value);
-      break;
-    case 2:
-      PMP_CSR_RW(access, pmpaddr2, *value);
-      break;
-    case 3:
-      PMP_CSR_RW(access, pmpaddr3, *value);
-      break;
-    case 4:
-      PMP_CSR_RW(access, pmpaddr4, *value);
-      break;
-    case 5:
-      PMP_CSR_RW(access, pmpaddr5, *value);
-      break;
-    case 6:
-      PMP_CSR_RW(access, pmpaddr6, *value);
-      break;
-    case 7:
-      PMP_CSR_RW(access, pmpaddr7, *value);
-      break;
-    case 8:
-      PMP_CSR_RW(access, pmpaddr8, *value);
-      break;
-    case 9:
-      PMP_CSR_RW(access, pmpaddr9, *value);
-      break;
-    case 10:
-      PMP_CSR_RW(access, pmpaddr10, *value);
-      break;
-    case 11:
-      PMP_CSR_RW(access, pmpaddr11, *value);
-      break;
-    case 12:
-      PMP_CSR_RW(access, pmpaddr12, *value);
-      break;
-    case 13:
-      PMP_CSR_RW(access, pmpaddr13, *value);
-      break;
-    case 14:
-      PMP_CSR_RW(access, pmpaddr14, *value);
-      break;
-    case 15:
-      PMP_CSR_RW(access, pmpaddr15, *value);
-      break;
+#include "sw/device/lib/runtime/pmp_regions.def"
     default:
       return false;
   }
